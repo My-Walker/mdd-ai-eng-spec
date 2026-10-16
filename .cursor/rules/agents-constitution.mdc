@@ -1,0 +1,13 @@
+---
+description: 强制加载 AI 工程规范宪法 ai-engineering-specs/AGENTS.md，并按其路由读取规约、SOP 与技能
+alwaysApply: true
+---
+
+# 规范宪法激活锚点
+
+会话开始或接到任何任务时，必须先用读取工具完整加载 `./ai-engineering-specs/AGENTS.md`，将其作为最高行动准则，再开始思考与改动。
+
+- 禁止仅凭本规则或索引摘要代替宪法正文。
+- 按宪法中的动态路由，根据任务在 `rules/`、`workflows/`、`skills/` 的索引中定位目标文件，并主动读取完整 Markdown 后再执行。
+- 多处指令冲突时，按宪法规定的优先级裁决：原子实体文件 > 目录索引地图 > 全局总纲。
+- 交付前遵守宪法中的完工协议。
