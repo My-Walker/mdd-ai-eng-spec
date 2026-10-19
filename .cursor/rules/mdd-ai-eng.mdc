@@ -1,0 +1,10 @@
+---
+description: 强制先完整加载 ./ai-engineering-specs/AGENTS.md，并以其全文为最高行动准则
+alwaysApply: true
+---
+
+<!-- mdd-ai-eng:start -->
+# mdd-ai-eng 激活锚点
+
+会话开始或接到任何任务时，必须先用读取工具完整加载 `./ai-engineering-specs/AGENTS.md`。该文件是最高行动准则。禁止用本锚点代替该文件。
+<!-- mdd-ai-eng:end -->

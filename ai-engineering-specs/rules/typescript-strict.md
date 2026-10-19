@@ -1,6 +1,5 @@
 ---
 id: rule-typescript-strict
-version: 1.0.0
 schema: strict
 ---
 # TypeScript 严格治理规范

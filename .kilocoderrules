@@ -1,3 +1,5 @@
-# Kilo Code 项目级激活锚点
+<!-- mdd-ai-eng:start -->
+# mdd-ai-eng 激活锚点
 
-当 Agent 初始化时，必须立即将 `./ai-engineering-specs/AGENTS.md` 作为核心元规则加载，并根据任务需求动态读取对应的规约、SOP与技能。
+会话开始或接到任何任务时，必须先用读取工具完整加载 `./ai-engineering-specs/AGENTS.md`。该文件是最高行动准则。禁止用本锚点代替该文件。
+<!-- mdd-ai-eng:end -->

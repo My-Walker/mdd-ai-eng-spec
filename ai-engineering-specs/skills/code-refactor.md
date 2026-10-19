@@ -1,6 +1,5 @@
 ---
 id: skill-code-refactor
-version: 1.0.0
 ---
 # 专业技能：模块化重构指南
 
