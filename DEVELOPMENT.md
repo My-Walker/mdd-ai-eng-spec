@@ -20,9 +20,10 @@
 package.json                  包名、版本、发布清单、安装脚本入口
 README.md                     安装方说明，随包发布
 DEVELOPMENT.md                本文件，不发布
-scripts/install-anchors.js    向项目最外层写入锚点，随包发布
-scripts/check-system.sh       校验规范索引路径是否存在
-scripts/run-evals.py          检查真实模型输出，不生成模拟结果
+scripts/                     维护脚本。作用与用法见 scripts/README.md
+  install-anchors.js          写入或刷新锚点，随包发布
+  check-system.sh             校验规范索引路径
+  run-evals.py                检查已保存的真实 Agent 回复
 test/                         锚点安装单元测试
 evals/                        行为评测。用法见 evals/README.md
   test-suite.json             题目与通过条件
