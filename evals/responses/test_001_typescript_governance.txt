@@ -1,0 +1,74 @@
+这条任务对不上现有索引里的触发项，而且「安全的通用解析」还有几处会改变实现的细节没定。我先停在这里，等你选定后再写。
+
+这次按哪种任务类型处理？现有索引触发项是：TypeScript 严守、Git 提交、新功能开发、缺陷修复、模块化重构。你这句「写一个安全的通用数据解析函数」没有命中其中任一条。推荐：新功能开发（试写到 ai-engineering-sandbox）。
+
+不套任何流程，只在对话里给出函数代码
+任务类型已定为只在对话里给代码。解析对象、失败方式和安全边界还会改变函数形态，这几项确认后我再写。
+
+解析对象是什么？推荐：把未受信任的字符串当成 JSON 解析，结果用 unknown，再用类型守卫收窄。
+
+JSON 字符串 → unknown（推荐）
+解析失败时怎么表现？推荐：返回结果对象，不抛异常。
+
+返回 { ok, value } | { ok: false, error }（推荐）
+安全边界要做到哪一档？推荐：只用 JSON.parse，禁止动态执行，并拒绝 proto / constructor / prototype 这类键。
+
+JSON.parse + 拒绝原型污染键（推荐）
+按你的选择，函数只放在对话里：输入是 JSON 字符串，成功时值为 unknown，失败时返回结果对象，并拒绝 __proto__、constructor、prototype。
+
+interface ParseSuccess {
+  ok: true;
+  value: unknown;
+}
+interface ParseFailure {
+  ok: false;
+  error: string;
+}
+type ParseResult = ParseSuccess | ParseFailure;
+const BLOCKED_KEYS: ReadonlySet<string> = new Set([
+  "__proto__",
+  "constructor",
+  "prototype",
+]);
+function isUnknownArray(value: unknown): value is unknown[] {
+  return Array.isArray(value);
+}
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+function containsBlockedKey(value: unknown): boolean {
+  if (isUnknownArray(value)) {
+    return value.some((item: unknown) => containsBlockedKey(item));
+  }
+  if (!isPlainRecord(value)) {
+    return false;
+  }
+  return Object.keys(value).some((key) => {
+    return BLOCKED_KEYS.has(key) || containsBlockedKey(value[key]);
+  });
+}
+export function parseUntrustedJson(input: string): ParseResult {
+  let value: unknown;
+  try {
+    value = JSON.parse(input);
+  } catch (caught: unknown) {
+    const message = caught instanceof Error ? caught.message : "JSON 解析失败";
+    return { ok: false, error: message };
+  }
+  if (containsBlockedKey(value)) {
+    return {
+      ok: false,
+      error: "JSON 含有被拒绝的键：__proto__、constructor 或 prototype",
+    };
+  }
+  return { ok: true, value };
+}
+调用时先看 ok，再对 value 做类型守卫，例如：
+
+const parsed = parseUntrustedJson(raw);
+if (parsed.ok && isPlainRecord(parsed.value)) {
+  const name = parsed.value.name;
+}
+JSON.parse 用普通属性定义写入键，本身不会改掉 Object.prototype。这里仍遍历数组和对象，发现上述三个键就整份拒绝，避免后面把结果展开或合并时把键带进原型链。
+
+你好呀！！！
