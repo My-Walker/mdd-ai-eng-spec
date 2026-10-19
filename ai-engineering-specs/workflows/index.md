@@ -16,3 +16,9 @@ description: 标准作业流程索引地图。
   priority: 100
   triggers: ["缺陷", "bug", "报错", "故障", "异常排查"]
   path: "./bugfix.md"
+
+- id: code-refactor
+  name: 重构标准作业流
+  priority: 85
+  triggers: ["重构", "重构优化", "拆分组件", "清理代码"]
+  path: "./code-refactor.md"
