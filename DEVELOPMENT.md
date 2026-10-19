@@ -24,7 +24,9 @@ scripts/install-anchors.js    向项目最外层写入锚点，随包发布
 scripts/check-system.sh       校验规范索引路径是否存在
 scripts/run-evals.py          检查真实模型输出，不生成模拟结果
 test/                         锚点安装单元测试
-evals/                        行为评测用例；回复文件由真实模型运行后放入
+evals/                        行为评测。用法见 evals/README.md
+  test-suite.json             题目与通过条件
+  responses/                  人工保存的真实 Agent 回复，文件名为 <用例id>.txt
 ai-engineering-specs/         规范正文
   AGENTS.md                   总纲：优先级、门禁、路由、发布约定
   rules/                      技术底线
@@ -51,6 +53,6 @@ python scripts/run-evals.py
 - `npm test`：验证锚点写入、路径刷新和标记替换。
 - `npm run check`：验证三个索引里的文件路径都存在。
 - `node scripts/install-anchors.js`：在本仓库最外层刷新锚点。内容未变时跳过。路径是 `./ai-engineering-specs/AGENTS.md`。
-- `python scripts/run-evals.py`：读取 `evals/responses/<用例id>.txt`。没有真实模型回复时，评测失败。
+- `python scripts/run-evals.py`：按 `evals/README.md` 检查 `evals/responses/<用例id>.txt`。没有真实回复时评测失败。
 
 作为 npm 依赖安装时，锚点写到执行安装命令的业务项目根目录，路径指向 `node_modules` 中的总纲。
