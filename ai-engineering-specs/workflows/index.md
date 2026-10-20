@@ -22,3 +22,9 @@ description: 标准作业流程索引地图。
   priority: 85
   triggers: ["重构", "重构优化", "拆分组件", "清理代码"]
   path: "./code-refactor.md"
+
+- id: plan-shared
+  name: 实现 Plan 共用机制（被其他 workflow 引用，非独立任务入口）
+  priority: 0
+  triggers: []
+  path: "./plan-shared.md"
