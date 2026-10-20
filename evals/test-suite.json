@@ -1,0 +1,33 @@
+{
+  "suite_name": "professional-ai-engineering-evals",
+  "response_dir": "evals/responses",
+  "test_cases": [
+    {
+      "id": "test_001_typescript_governance",
+      "description": "验证真实输出在处理动态数据时拒绝 any，并使用 unknown",
+      "prompt": "帮我写一个安全的通用数据解析函数",
+      "assertion_type": "no_any_type"
+    },
+    {
+      "id": "test_002_sop_workflow",
+      "description": "验证真实输出在新功能任务中列出未决问题并包含静态检查",
+      "prompt": "帮我规划并实现一个用户列表模块",
+      "assertion_type": "contains_all",
+      "required_phrases": ["未决问题", "静态检查"]
+    },
+    {
+      "id": "test_003_bugfix_human_evidence",
+      "description": "验证真实输出在无法复现时要求人工回传日志后再分析",
+      "prompt": "这个功能我这边复现不了，线上偶发报错，帮我修",
+      "assertion_type": "contains_all",
+      "required_phrases": ["日志", "人工"]
+    },
+    {
+      "id": "test_004_bugfix_scope_choice",
+      "description": "验证真实输出在原因确认后给出最小修复与长期维护修复两个方案，并等待选择",
+      "prompt": "原因已经确认，帮我修复这个 bug",
+      "assertion_type": "contains_all",
+      "required_phrases": ["最小修复", "长期维护修复"]
+    }
+  ]
+}

@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AI SSE 打印机</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --paper: #f3ecdf;
+        --card: #fffdf8;
+        --ink: #2a241c;
+        --muted: #6f6456;
+        --line: #e4d7c4;
+        --accent: #1f6b4a;
+        --accent-ink: #f4fff8;
+        --danger: #8d3b2f;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        height: 100%;
+        overflow: hidden;
+      }
+
+      body {
+        margin: 0;
+        background:
+          radial-gradient(circle at top, #fff8ec 0, transparent 42%),
+          var(--paper);
+        color: var(--ink);
+        font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      }
+
+      main {
+        width: min(760px, calc(100% - 32px));
+        height: 100%;
+        margin: 0 auto;
+        padding: 16px 0;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        overflow: hidden;
+      }
+
+      header h1 {
+        margin: 0 0 8px;
+        font-size: 28px;
+        letter-spacing: 0.02em;
+      }
+
+      header p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      header,
+      #status,
+      form {
+        flex: none;
+      }
+
+      #thread {
+        flex: 1 1 auto;
+        min-height: 0;
+        margin: 0;
+        padding: 16px;
+        overflow: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: #efe6d6;
+      }
+
+      #thread:empty::before {
+        content: "对话会留在这里。刷新页面后历史会消失。";
+        color: var(--muted);
+      }
+
+      .message {
+        display: flex;
+      }
+
+      .message.user {
+        justify-content: flex-end;
+      }
+
+      .message.ai {
+        justify-content: flex-start;
+      }
+
+      .bubble {
+        max-width: min(80%, 520px);
+        padding: 10px 12px;
+        border-radius: 14px;
+      }
+
+      .message.user .bubble {
+        background: var(--accent);
+        color: var(--accent-ink);
+        border-bottom-right-radius: 4px;
+      }
+
+      .message.ai .bubble {
+        background: var(--card);
+        color: var(--ink);
+        border: 1px solid var(--line);
+        border-bottom-left-radius: 4px;
+      }
+
+      .who {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 12px;
+        opacity: 0.75;
+      }
+
+      .body {
+        margin: 0;
+        white-space: pre-wrap;
+        line-height: 1.7;
+      }
+
+      .caret {
+        display: inline-block;
+        width: 0.55ch;
+        height: 1.05em;
+        margin-left: 1px;
+        vertical-align: text-bottom;
+        background: var(--accent);
+        animation: blink 1s steps(1) infinite;
+      }
+
+      @keyframes blink {
+        50% {
+          opacity: 0;
+        }
+      }
+
+      #status {
+        min-height: 1.4em;
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      form {
+        display: grid;
+        gap: 10px;
+      }
+
+      label {
+        font-size: 14px;
+      }
+
+      textarea {
+        width: 100%;
+        min-height: 96px;
+        resize: vertical;
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: var(--card);
+        color: inherit;
+        font: inherit;
+        line-height: 1.5;
+      }
+
+      textarea:focus {
+        outline: 2px solid var(--accent);
+        border-color: transparent;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      button {
+        border: 0;
+        border-radius: 999px;
+        padding: 10px 16px;
+        font: inherit;
+        cursor: pointer;
+      }
+
+      button:disabled {
+        cursor: not-allowed;
+        opacity: 0.55;
+      }
+
+      #send {
+        background: var(--accent);
+        color: var(--accent-ink);
+      }
+
+      #stop {
+        background: var(--danger);
+        color: #fff8f6;
+      }
+
+      #reset {
+        background: transparent;
+        color: var(--ink);
+        border: 1px solid var(--line);
+      }
+
+      .examples {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .example {
+        background: transparent;
+        color: var(--ink);
+        border: 1px solid var(--line);
+        padding: 6px 12px;
+        font-size: 13px;
+      }
+
+      @media (max-width: 640px) {
+        main {
+          width: calc(100% - 24px);
+          padding: 12px 0;
+        }
+
+        header h1 {
+          font-size: 24px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>AI SSE 打印机</h1>
+        <p>
+          在页面里用 ReadableStream 模拟 text/event-stream。发送后先显示用户气泡，再逐帧打印 AI 气泡。去掉首尾空格后与示例问题全文相同，就回复对应答案；否则从答案里随机一条。对话只留在当前页面，重置只清空输入框。
+        </p>
+      </header>
+      <div id="thread" role="log" aria-live="polite"></div>
+      <p id="status" role="status">等待提问</p>
+      <form id="composer">
+        <label for="question">问题</label>
+        <textarea
+          id="question"
+          name="question"
+          placeholder="输入问题，或点下面的示例。Enter 发送，Shift+Enter 换行"
+        ></textarea>
+        <ul class="examples" id="examples"></ul>
+        <div class="actions">
+          <button id="send" type="submit">发送</button>
+          <button id="stop" type="button" disabled>停止</button>
+          <button id="reset" type="button">重置</button>
+        </div>
+      </form>
+    </main>
+    <script>
+      (function () {
+        const thread = document.getElementById("thread");
+        const statusEl = document.getElementById("status");
+        const form = document.getElementById("composer");
+        const questionEl = document.getElementById("question");
+        const sendBtn = document.getElementById("send");
+        const stopBtn = document.getElementById("stop");
+        const resetBtn = document.getElementById("reset");
+        const examplesEl = document.getElementById("examples");
+
+        const EXAMPLES = [
+          {
+            question: "什么是 SSE",
+            answer: "SSE（Server-Sent Events）是服务器向浏览器单向推送事件的方式。响应类型是 text/event-stream，每条事件写成 data: 开头的一行，事件之间用空行隔开。浏览器可以用 EventSource 接收，这个页面则用 ReadableStream 模拟同样的帧格式。"
+          },
+          {
+            question: "打字机效果是怎么来的",
+            answer: "打字机效果来自逐帧到达，而不是事先拿到全文再慢慢显示。页面把答案切成单个字符，每个字符单独组成一帧 data: {\"content\":\"…\"}。客户端每解析出一帧，就立刻把这个字追加到输出区，所以你会看到逐字出现。"
+          },
+          {
+            question: "停止按钮会做什么",
+            answer: "停止会中止当前这次读取。页面持有一个 AbortController，点停止就 abort。流在下一帧等待时发现信号已中止，抛出 AbortError。已经打印出来的文字会留在页面上，状态改为已停止。"
+          },
+          {
+            question: "重置按钮会做什么",
+            answer: "重置只清空输入框。已经出现的用户消息和 AI 回复都会留在对话里，正在打印的回复也不会被打断。这些记录只存在当前页面，刷新后才会消失。"
+          },
+          {
+            question: "SSE 和 WebSocket 有什么区别",
+            answer: "SSE 只有服务器到浏览器这一条方向，基于普通 HTTP，适合持续推送文本事件。WebSocket 是双向连接，客户端和服务器都能随时发消息，适合聊天、协同编辑这类需要回传的场景。这个演示只需要单向吐字，所以用 SSE 帧就够了。"
+          },
+          {
+            question: "这个页面在做什么",
+            answer: "这个页面是一个单文件演示。它不请求真实模型，也不启动独立的 SSE 服务。你提交问题后，页面在内存里选出一条答案，再按 SSE 帧推给同一页里的读取逻辑，用来观察流式打印、停止和重置。"
+          }
+        ];
+
+        let controller = null;
+        let runId = 0;
+        let frameCount = 0;
+        let replyMode = "";
+
+        function setStatus(text) {
+          statusEl.textContent = text;
+        }
+
+        function setBusy(busy) {
+          sendBtn.disabled = busy;
+          questionEl.disabled = busy;
+          stopBtn.disabled = !busy;
+          examplesEl.querySelectorAll("button").forEach(function (button) {
+            button.disabled = busy;
+          });
+        }
+
+        function pickReply(question) {
+          const normalized = question.trim();
+          const found = EXAMPLES.find(function (item) {
+            return item.question === normalized;
+          });
+          if (found) {
+            return { text: found.answer, matched: true };
+          }
+          const index = Math.floor(Math.random() * EXAMPLES.length);
+          return { text: EXAMPLES[index].answer, matched: false };
+        }
+
+        function wait(ms, signal) {
+          return new Promise(function (resolve, reject) {
+            if (signal.aborted) {
+              reject(new DOMException("The operation was aborted.", "AbortError"));
+              return;
+            }
+            const timer = setTimeout(function () {
+              signal.removeEventListener("abort", onAbort);
+              resolve();
+            }, ms);
+            function onAbort() {
+              clearTimeout(timer);
+              reject(new DOMException("The operation was aborted.", "AbortError"));
+            }
+            signal.addEventListener("abort", onAbort, { once: true });
+          });
+        }
+
+        function createSseStream(text, signal) {
+          const encoder = new TextEncoder();
+          let offset = 0;
+          return new ReadableStream({
+            async pull(streamController) {
+              if (signal.aborted) {
+                throw new DOMException("The operation was aborted.", "AbortError");
+              }
+              if (offset >= text.length) {
+                streamController.enqueue(encoder.encode("data: [DONE]\n\n"));
+                streamController.close();
+                return;
+              }
+              const piece = text.slice(offset, offset + 1);
+              offset += piece.length;
+              const frame = "data: " + JSON.stringify({ content: piece }) + "\n\n";
+              streamController.enqueue(encoder.encode(frame));
+              await wait(28, signal);
+            }
+          });
+        }
+
+        async function consumeSse(stream, onData) {
+          const reader = stream.getReader();
+          const decoder = new TextDecoder();
+          let buffer = "";
+          try {
+            while (true) {
+              const step = await reader.read();
+              if (step.done) break;
+              buffer += decoder.decode(step.value, { stream: true });
+              let boundary = buffer.indexOf("\n\n");
+              while (boundary !== -1) {
+                const raw = buffer.slice(0, boundary);
+                buffer = buffer.slice(boundary + 2);
+                const data = raw
+                  .split("\n")
+                  .filter(function (line) {
+                    return line.startsWith("data:");
+                  })
+                  .map(function (line) {
+                    return line.slice(5).trimStart();
+                  })
+                  .join("\n");
+                if (data) onData(data);
+                boundary = buffer.indexOf("\n\n");
+              }
+            }
+          } finally {
+            reader.releaseLock();
+          }
+        }
+
+        function appendMessage(role, text) {
+          const row = document.createElement("article");
+          row.className = "message " + role;
+          const bubble = document.createElement("div");
+          bubble.className = "bubble";
+          const who = document.createElement("span");
+          who.className = "who";
+          who.textContent = role === "user" ? "用户" : "AI";
+          const body = document.createElement("p");
+          body.className = "body";
+          body.textContent = text;
+          bubble.append(who, body);
+          row.appendChild(bubble);
+          thread.appendChild(row);
+          row.scrollIntoView({ block: "end" });
+          return body;
+        }
+
+        function ensureCaret(body) {
+          if (body.querySelector(".caret")) return;
+          const caret = document.createElement("span");
+          caret.className = "caret";
+          caret.setAttribute("aria-hidden", "true");
+          body.appendChild(caret);
+        }
+
+        function appendText(body, text) {
+          const caret = body.querySelector(".caret");
+          const node = document.createTextNode(text);
+          if (caret) body.insertBefore(node, caret);
+          else body.appendChild(node);
+          body.closest(".message").scrollIntoView({ block: "end" });
+        }
+
+        async function start(question) {
+          const id = ++runId;
+          controller = new AbortController();
+          frameCount = 0;
+          appendMessage("user", question);
+          questionEl.value = "";
+          const body = appendMessage("ai", "");
+          ensureCaret(body);
+          const reply = pickReply(question);
+          replyMode = reply.matched ? "匹配示例" : "随机答案";
+          setBusy(true);
+          setStatus("正在接收 SSE（" + replyMode + "）…");
+          try {
+            await consumeSse(createSseStream(reply.text, controller.signal), function (data) {
+              if (id !== runId) return;
+              if (data === "[DONE]") return;
+              const payload = JSON.parse(data);
+              frameCount += 1;
+              appendText(body, payload.content);
+              setStatus("正在接收 SSE（" + replyMode + "）… 已打印 " + frameCount + " 帧");
+            });
+            if (id !== runId) return;
+            body.querySelector(".caret")?.remove();
+            setStatus("完成（" + replyMode + "），共 " + frameCount + " 帧");
+          } catch (error) {
+            if (id !== runId) return;
+            body.querySelector(".caret")?.remove();
+            if (error && error.name === "AbortError") {
+              setStatus("已停止，已打印 " + frameCount + " 帧");
+            } else {
+              setStatus("读取失败");
+            }
+          } finally {
+            if (id === runId) {
+              controller = null;
+              setBusy(false);
+            }
+          }
+        }
+
+        form.addEventListener("submit", function (event) {
+          event.preventDefault();
+          if (controller) return;
+          const question = questionEl.value.trim();
+          if (!question) {
+            setStatus("请先输入问题");
+            questionEl.focus();
+            return;
+          }
+          start(question);
+        });
+
+        questionEl.addEventListener("keydown", function (event) {
+          if (event.key === "Enter" && !event.shiftKey) {
+            event.preventDefault();
+            form.requestSubmit();
+          }
+        });
+
+        stopBtn.addEventListener("click", function () {
+          controller?.abort();
+        });
+
+        resetBtn.addEventListener("click", function () {
+          questionEl.value = "";
+          setStatus("已清空输入，对话还在");
+          questionEl.focus();
+        });
+
+        EXAMPLES.forEach(function (item) {
+          const li = document.createElement("li");
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "example";
+          button.textContent = item.question;
+          button.addEventListener("click", function () {
+            if (controller) return;
+            questionEl.value = item.question;
+            questionEl.focus();
+          });
+          li.appendChild(button);
+          examplesEl.appendChild(li);
+        });
+      })();
+    </script>
+  </body>
+</html>
