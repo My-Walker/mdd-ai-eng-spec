@@ -70,5 +70,3 @@ if (parsed.ok && isPlainRecord(parsed.value)) {
   const name = parsed.value.name;
 }
 JSON.parse 用普通属性定义写入键，本身不会改掉 Object.prototype。这里仍遍历数组和对象，发现上述三个键就整份拒绝，避免后面把结果展开或合并时把键带进原型链。
-
-你好呀！！！

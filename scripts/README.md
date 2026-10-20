@@ -40,3 +40,30 @@ python scripts/run-evals.py
 ```
 
 缺少回复文件，或回复不满足断言时，命令失败。
+
+## release.sh
+
+按 R1 准备正式发布：在 `dev` 上升版本并提交 → `npm test` / `npm run check` → 推 `dev` → 合并并推 `main` → 打 `vX.Y.Z` tag。  
+**不执行** `npm publish`；结束后停在 `main`，打印手动发布命令（支持浏览器 2FA，命令中不含 `--otp`）。
+
+版本号每次用参数传入，不必改脚本：
+
+```bash
+# 手动指定完整版本号（推荐）。例：写成 1.2.0，即发布为 1.2.0 / tag v1.2.0
+bash scripts/release.sh 1.2.0
+# 等价写法（把参数传给 npm script）
+npm run release -- 1.2.0
+
+# --bump：不手写版本号，相对当前 package.json 按 SemVer 自动 +1
+# （假设当前是 1.1.0）
+bash scripts/release.sh --bump patch   # → 1.1.1，小修 / 文案澄清
+bash scripts/release.sh --bump minor   # → 1.2.0，向后兼容的新能力
+bash scripts/release.sh --bump major   # → 2.0.0，破坏性变更
+
+# --dry-run：只打印将执行的步骤，不改文件、不提交、不推送、不打 tag
+# 可与显式版本或 --bump 组合，例如：
+bash scripts/release.sh --dry-run 1.2.0
+bash scripts/release.sh --dry-run --bump patch
+```
+
+必须二选一：显式版本号，或 `--bump`（二者不要同时用于定版本；`--dry-run` 可与其中之一组合）。工作区必须干净，且当前分支为 `dev`。本脚本不进入 npm 发布包。
