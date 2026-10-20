@@ -9,7 +9,8 @@
   "scripts": {
     "postinstall": "node scripts/install-anchors.js",
     "test": "node test/install-anchors.test.js",
-    "check": "bash scripts/check-system.sh"
+    "check": "bash scripts/check-system.sh",
+    "release": "bash scripts/release.sh"
   },
   "files": [
     "README.md",

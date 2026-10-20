@@ -12,7 +12,7 @@
 
 `package.json` 本身会被 npm 一并发布。`DEVELOPMENT.md`、`test/`、`evals/`、`ai-engineering-sandbox/`、`.cursor/`、`.kilocoderrules` 不在 `files` 中，不会发布。
 
-版本只记录在根目录 `package.json`。当前 `"private": true`，去掉之后才能 `npm publish`。发布源由根目录 `.npmrc` 固定为官方源。
+版本只记录在根目录 `package.json`。发布源由根目录 `.npmrc` 固定为官方源。正式发布主干为远程 `main`；日常开发在 `dev`。
 
 ## 目录
 
@@ -24,6 +24,7 @@ scripts/                     维护脚本。作用与用法见 scripts/README.md
   install-anchors.js          写入或刷新锚点，随包发布
   check-system.sh             校验规范索引路径
   run-evals.py                检查已保存的真实 Agent 回复
+  release.sh                  发布准备（升版本/合 main/打 tag，不执行 publish）
 test/                         锚点安装单元测试
 evals/                        行为评测。用法见 evals/README.md
   test-suite.json             题目与通过条件
@@ -49,11 +50,13 @@ npm test
 npm run check
 node scripts/install-anchors.js
 python scripts/run-evals.py
+npm run release -- 1.2.0
 ```
 
 - `npm test`：验证锚点写入、路径刷新和标记替换。
 - `npm run check`：验证三个索引里的文件路径都存在。
 - `node scripts/install-anchors.js`：在本仓库最外层刷新锚点。内容未变时跳过。路径是 `./ai-engineering-specs/AGENTS.md`。
 - `python scripts/run-evals.py`：按 `evals/README.md` 检查 `evals/responses/<用例id>.txt`。没有真实回复时评测失败。
+- `npm run release -- <版本>`：发布准备流程，详见 `scripts/README.md`。结束后在 `main` 上手动执行 `npm publish`（浏览器 2FA），再 `git checkout dev`。
 
 作为 npm 依赖安装时，锚点写到执行安装命令的业务项目根目录，路径指向 `node_modules` 中的总纲。
