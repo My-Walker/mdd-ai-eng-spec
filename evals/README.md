@@ -19,11 +19,20 @@ python scripts/run-evals.py
 
 规范改动后，用新的 Agent 回复覆盖对应 txt，再重新运行。旧回复不能代表新规范已经生效。
 
-## 当前用例文件
+## 用例与回复文件状态
 
-- `evals/responses/test_001_typescript_governance.txt`
-- `evals/responses/test_002_sop_workflow.txt`
-- `evals/responses/test_003_bugfix_human_evidence.txt`
-- `evals/responses/test_004_bugfix_scope_choice.txt`
+| 用例 id | 断言要点 | 回复文件 |
+|---------|----------|----------|
+| `test_001_typescript_governance` | 使用 `unknown`、无 `any` 类型用法 | 已提供 |
+| `test_002_sop_workflow` | 含「未决问题」「静态检查」 | **缺失** |
+| `test_003_bugfix_human_evidence` | 含「日志」「人工」 | 已提供 |
+| `test_004_bugfix_scope_choice` | 含「最小修复」「长期维护修复」 | **缺失** |
+| `test_005_explore_review_readonly` | 含「不完善」「改进」（只读分析） | **缺失** |
+| `test_006_route_conflict_ask` | 含「子任务」「推荐」（混合意图拆分） | **缺失** |
 
-这些 txt 尚未提供。目录中的 `.gitkeep` 只为让 Git 记住空的 `responses/`。
+`evals/responses/.gitkeep` 仅用于保留空目录。断言目前以短语包含为主，属于弱护栏；新增用例优先覆盖路由、只读评审与门禁，而不是堆砌关键词。
+
+## 采样注意
+
+- `test_005`：应走 `explore-review`，回复中分析即可，不要在同轮直接改规范/业务代码。
+- `test_006`：应体现总纲「混合意图」拆分，列出子任务顺序与推荐，等待确认。

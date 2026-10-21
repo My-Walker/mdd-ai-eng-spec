@@ -27,6 +27,30 @@ import os, sys, re
 
 indexes = ["rules/index.md", "workflows/index.md", "skills/index.md"]
 has_error = False
+frontmatter_re = re.compile(r"\A---\s*\n(.*?)\n---\s*\n", re.S)
+id_re = re.compile(r"(?m)^id:\s*\S+")
+category_re = re.compile(r"(?m)^category:\s*\S+")
+
+def check_frontmatter(path, require_id=False, require_category=False):
+    global has_error
+    with open(path, "r", encoding="utf-8") as f:
+        content = f.read()
+    m = frontmatter_re.match(content)
+    if not m:
+        print(f"[错误] 缺少 YAML Frontmatter: {path}")
+        has_error = True
+        return
+    body = m.group(1)
+    if require_id and not id_re.search(body):
+        print(f"[错误] Frontmatter 缺少 id 字段: {path}")
+        has_error = True
+    elif require_id:
+        print(f"[正常] Frontmatter id 校验通过: {path}")
+    if require_category and not category_re.search(body):
+        print(f"[错误] Frontmatter 缺少 category 字段: {path}")
+        has_error = True
+    elif require_category:
+        print(f"[正常] Frontmatter category 校验通过: {path}")
 
 for idx in indexes:
     if not os.path.exists(idx):
@@ -34,11 +58,17 @@ for idx in indexes:
         has_error = True
         continue
 
+    check_frontmatter(idx, require_category=True)
+
     dirname = os.path.dirname(idx)
     with open(idx, "r", encoding="utf-8") as f:
         content = f.read()
 
-    paths = re.findall(r"path:\s*[\"\x27]\.\/([^\"\x27]+)[\"\x27]", content)
+    # 忽略 Markdown 代码块内的示例 path，避免误报
+    content_for_paths = re.sub(r"```.*?```", "", content, flags=re.S)
+    paths = re.findall(r"path:\s*[\"\x27]\.\/([^\"\x27]+)[\"\x27]", content_for_paths)
+    if idx == "skills/index.md" and not paths:
+        print(f"[正常] skills 索引为空预留（无 path 条目）: {idx}")
     for p in paths:
         target_path = os.path.join(dirname, p)
         if not os.path.exists(target_path):
@@ -46,6 +76,7 @@ for idx in indexes:
             has_error = True
         else:
             print(f"[正常] 链路校验通过: {idx} -> {p}")
+            check_frontmatter(target_path, require_id=True)
 
 if has_error:
     sys.exit(1)
