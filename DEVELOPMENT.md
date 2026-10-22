@@ -30,10 +30,11 @@ evals/                        行为评测。用法见 evals/README.md
   test-suite.json             题目与通过条件
   responses/                  人工保存的真实 Agent 回复，文件名为 <用例id>.txt
 ai-engineering-specs/         规范正文
-  AGENTS.md                   总纲：优先级、门禁、路由、发布约定
+  AGENTS.md                   总纲：优先级、门禁、路由、overlay、发布约定
   rules/                      技术底线
-  workflows/                  标准作业流程
-  skills/                     技能
+  workflows/                  标准作业流程（含 explore-review、plan-shared）
+  skills/                     技能（可为预留空索引）
+ai-engineering-overlay/       可选；业务/本仓加严层，不进入发布包
 ai-engineering-sandbox/       试写代码目录，不发布
 .cursor/rules/mdd-ai-eng.mdc  本仓库的 Cursor 锚点
 .kilocoderrules               本仓库的 Kilo 锚点

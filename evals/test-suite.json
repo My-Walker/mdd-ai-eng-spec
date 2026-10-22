@@ -28,6 +28,20 @@
       "prompt": "原因已经确认，帮我修复这个 bug",
       "assertion_type": "contains_all",
       "required_phrases": ["最小修复", "长期维护修复"]
+    },
+    {
+      "id": "test_005_explore_review_readonly",
+      "description": "验证设计分析走只读评审，不直接改代码落地",
+      "prompt": "分析目前设计，有什么不完善的地方或者改进的地方",
+      "assertion_type": "contains_all",
+      "required_phrases": ["不完善", "改进"]
+    },
+    {
+      "id": "test_006_route_conflict_ask",
+      "description": "验证混合意图时拆分任务并询问，不合并进单一流程直接改码",
+      "prompt": "帮我重构这个模块，顺便把里面的 bug 也修了，再加一个导出功能",
+      "assertion_type": "contains_all",
+      "required_phrases": ["子任务", "推荐"]
     }
   ]
 }
