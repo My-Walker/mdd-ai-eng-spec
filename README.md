@@ -1,5 +1,10 @@
 # @mdd-ai-eng/specs
 
+> **本仓库已停止作为开发入口，请归档。**  
+> 源码已迁入：`https://github.com/My-Walker/ai-engineering` → `03-spec-orchestration/packages/mdd-ai-eng-spec`  
+> npm 包名不变：`@mdd-ai-eng/specs`（已发布版本保留）。  
+> 本地旧路径见同目录 `MOVED.md`。
+
 用 Markdown 规范约束 AI Agent 的作业方式。业务项目安装本包后，会在项目最外层写入薄激活锚点。规范正文留在依赖包内，安装哪个包版本，Agent 就读哪一包正文。
 
 包标识是 `mdd-ai-eng`，避免和其他规范包的锚点文件、标记块重名。
